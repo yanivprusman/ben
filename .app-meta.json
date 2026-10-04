@@ -1,0 +1,7 @@
+{
+  "description": "Ben on the phone: the conversation held through the wake phrase and nothing else - what was heard, what Ben answered, live as it happens",
+  "icon": "MessagesSquare",
+  "sharedLibs": [
+    "android-feedback-lib"
+  ]
+}
