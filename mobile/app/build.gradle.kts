@@ -15,11 +15,16 @@ val gitShortHash = providers.exec {
     commandLine("git", "rev-parse", "--short", "HEAD")
 }.standardOutput.asText.get().trim().ifEmpty { "dev" }
 
-// Local, gitignored build config (mobile/.env): backend base URL baked at build time.
+// Local, gitignored build config (mobile/.env), baked into the APK at build time.
+//
+// Ben has no data of its own: the conversation is kept by the voiceControl server on the
+// desktop, and this app reads it from there. So the base URL is that server's, and the
+// token is its READ token (VOICE_CONTROL_READ_TOKEN) — never the one that sends commands.
 val envFile = rootProject.file(".env")
 val envProps = Properties()
 if (envFile.exists()) envFile.inputStream().use { envProps.load(it) }
-val apiBaseUrl = envProps.getProperty("API_BASE_URL", "http://10.7.0.1:3173/")
+val apiBaseUrl = envProps.getProperty("API_BASE_URL", "http://10.7.0.2:3143/")
+val apiToken = envProps.getProperty("API_TOKEN", "")
 
 android {
     namespace = "com.automatelinux.ben"
@@ -32,6 +37,7 @@ android {
         versionCode = gitCommitCount
         versionName = "v${gitCommitCount} (${gitShortHash})"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
 
     buildTypes {
@@ -59,8 +65,6 @@ android {
 dependencies {
     // Shared KMP module (commonMain code shared with iOS)
     implementation(project(":shared"))
-    implementation(libs.kotlinx.datetime)
-    implementation(libs.multiplatform.settings)
 
     // Compose BOM
     implementation(platform(libs.compose.bom))

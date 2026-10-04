@@ -1,5 +1,24 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M38,38 h32 a6,6 0 0 1 6,6 v20 a6,6 0 0 1 -6,6 h-32 a6,6 0 0 1 -6,-6 v-20 a6,6 0 0 1 6,-6 z" />
-    <path android:fillColor="#B2DFDB" android:pathData="M46,48 h16 v4 h-16 z M46,56 h16 v4 h-16 z" />
+    <!-- Two speech bubbles stacked into a B: what was heard, and — with the tail and the
+         voice trace cut through it — what Ben said. -->
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.94" android:scaleY="0.94" android:translateY="-2.4">
+        <path android:pathData="M40,30 H56 A11,11 0 0 1 56,52 H40 A4,4 0 0 1 36,48 V34 A4,4 0 0 1 40,30 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="36" android:startY="30" android:endX="36" android:endY="52">
+                    <item android:offset="0" android:color="#FFFFFFFF" />
+                    <item android:offset="1" android:color="#FFDAD6CF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:fillType="evenOdd" android:pathData="M40,55.5 H60.5 A11.75,11.75 0 0 1 60.5,79 H44 L36,85 V59.5 A4,4 0 0 1 40,55.5 Z M47,63.25 H47 A2,2 0 0 1 49,65.25 V69.25 A2,2 0 0 1 47,71.25 H47 A2,2 0 0 1 45,69.25 V65.25 A2,2 0 0 1 47,63.25 Z M54.2,60.25 H54.2 A2,2 0 0 1 56.2,62.25 V72.25 A2,2 0 0 1 54.2,74.25 H54.2 A2,2 0 0 1 52.2,72.25 V62.25 A2,2 0 0 1 54.2,60.25 Z M61.4,62.25 H61.4 A2,2 0 0 1 63.4,64.25 V70.25 A2,2 0 0 1 61.4,72.25 H61.4 A2,2 0 0 1 59.4,70.25 V64.25 A2,2 0 0 1 61.4,62.25 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="36" android:startY="55.5" android:endX="72" android:endY="85">
+                    <item android:offset="0" android:color="#FFFFA07A" />
+                    <item android:offset="1" android:color="#FFF2542D" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
 </vector>

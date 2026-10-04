@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72"><clipPath id="t"><rect x="18" y="18" width="72" height="72" rx="16"/></clipPath><g clip-path="url(#t)"><defs>
+  <radialGradient id="bgf" gradientUnits="userSpaceOnUse" cx="34" cy="26" r="96"><stop offset="0" stop-color="#2B3036"/><stop offset="0.55" stop-color="#15181B"/><stop offset="1" stop-color="#0B0D0F"/></radialGradient>
+  <linearGradient id="pf" gradientUnits="userSpaceOnUse" x1="36" y1="30" x2="36" y2="52"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DAD6CF"/></linearGradient>
+  <linearGradient id="cf" gradientUnits="userSpaceOnUse" x1="36" y1="55.5" x2="72" y2="85"><stop offset="0" stop-color="#FFA07A"/><stop offset="1" stop-color="#F2542D"/></linearGradient>
+</defs>
+<rect width="108" height="108" fill="url(#bgf)"/>
+<g transform="translate(0 -2.4) translate(54 54) scale(0.94) translate(-54 -54)">
+  <path d="M40,30 H56 A11,11 0 0 1 56,52 H40 A4,4 0 0 1 36,48 V34 A4,4 0 0 1 40,30 Z" fill="url(#pf)"/>
+  <path d="M40,55.5 H60.5 A11.75,11.75 0 0 1 60.5,79 H44 L36,85 V59.5 A4,4 0 0 1 40,55.5 Z M47,63.25 H47 A2,2 0 0 1 49,65.25 V69.25 A2,2 0 0 1 47,71.25 H47 A2,2 0 0 1 45,69.25 V65.25 A2,2 0 0 1 47,63.25 Z M54.2,60.25 H54.2 A2,2 0 0 1 56.2,62.25 V72.25 A2,2 0 0 1 54.2,74.25 H54.2 A2,2 0 0 1 52.2,72.25 V62.25 A2,2 0 0 1 54.2,60.25 Z M61.4,62.25 H61.4 A2,2 0 0 1 63.4,64.25 V70.25 A2,2 0 0 1 61.4,72.25 H61.4 A2,2 0 0 1 59.4,70.25 V64.25 A2,2 0 0 1 61.4,62.25 Z" fill-rule="evenodd" fill="url(#cf)"/>
+</g></g></svg>
