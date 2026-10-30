@@ -26,7 +26,7 @@ every phone-only app here).
 
 So a change to *what is recorded* is a change in voiceControl, not here.
 
-## The token can read and nothing else
+## The token can read, and change one setting
 
 `mobile/.env` (gitignored) is baked into the APK:
 
@@ -36,7 +36,9 @@ API_TOKEN=<VOICE_CONTROL_READ_TOKEN from /etc/automatelinux/voicecontrol.env>
 ```
 
 It must be the **read** token. `VOICE_CONTROL_TOKEN` hands text to an agent
-running as root; a transcript viewer has no business carrying it. A build with
+running as root; a transcript viewer has no business carrying it. The one write
+the read token is allowed is `PUT /api/settings` — which voice the phone speaks
+Ben in (see below), a choice that changes nothing anyone hears but the sound. A build with
 no token, or a stale one, says so on screen ("The desktop refused this app") —
 it does not look like being offline.
 
@@ -74,6 +76,16 @@ it does not look like being offline.
   A saved copy from hours ago must not show Ben working.
 - Android 13+ confirms a copy by itself; the app's own "Copied" note is only for
   older versions (`platformConfirmsCopy`).
+
+## Ben's voice (`data/VoiceSetting.kt`, `ui/VoiceSheet.kt`)
+
+The round key left of the Live pill opens a sheet: **Caption voice** (Kokoro,
+rendered on the desktop — the same voice as the desktop captions) or **Phone
+voice** (the phone's own TTS). Added 2026-10-30. The setting lives on the
+voiceControl server and the listener app reads it from there (voiceControl
+CLAUDE.md, "Ben's voice"); this app only shows and changes it. Nothing is
+assumed: until the server answers, neither option is marked, and a failed
+change leaves the old one marked with the reason under it.
 
 ## Design
 

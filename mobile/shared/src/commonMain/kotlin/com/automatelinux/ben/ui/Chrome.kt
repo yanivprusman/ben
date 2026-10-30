@@ -44,9 +44,9 @@ import com.automatelinux.ben.data.Link
 import com.automatelinux.ben.ui.theme.LocalPalette
 import com.automatelinux.ben.ui.theme.LocalType
 
-/** The name, and whether the line to the desktop is open. */
+/** The name, the key to Ben's voice, and whether the line to the desktop is open. */
 @Composable
-fun TopBar(link: Link, onRetry: () -> Unit) {
+fun TopBar(link: Link, onRetry: () -> Unit, onVoice: () -> Unit) {
     val p = LocalPalette.current
     val t = LocalType.current
     Row(
@@ -55,6 +55,8 @@ fun TopBar(link: Link, onRetry: () -> Unit) {
     ) {
         Text("Ben", style = t.wordmark, color = p.ink)
         Spacer(Modifier.weight(1f))
+        VoiceKey(onVoice)
+        Spacer(Modifier.width(10.dp))
         LinkPill(link, onRetry)
     }
 }

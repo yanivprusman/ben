@@ -45,6 +45,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.automatelinux.ben.data.Conversation
 import com.automatelinux.ben.data.Link
+import com.automatelinux.ben.data.VoiceSetting
 import com.automatelinux.ben.data.Row as Line
 import com.automatelinux.ben.data.localDate
 import com.automatelinux.ben.data.timeline
@@ -60,7 +61,7 @@ import kotlinx.datetime.TimeZone
 
 /** The one screen: the conversation held through the wake phrase, newest at the bottom. */
 @Composable
-fun ConversationScreen(c: Conversation, now: () -> Long, platformConfirmsCopy: Boolean) {
+fun ConversationScreen(c: Conversation, voice: VoiceSetting, now: () -> Long, platformConfirmsCopy: Boolean) {
     val p = LocalPalette.current
     val zone = remember { TimeZone.currentSystemDefault() }
     val events = c.window.events
@@ -86,7 +87,13 @@ fun ConversationScreen(c: Conversation, now: () -> Long, platformConfirmsCopy: B
     }
 
     Column(Modifier.fillMaxSize().background(p.ground)) {
-        TopBar(link, onRetry = c::retryNow)
+        var voiceOpen by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+        TopBar(link, onRetry = c::retryNow, onVoice = {
+            voiceOpen = true
+            scope.launch { voice.load() }
+        })
+        if (voiceOpen) VoiceSheet(voice, onDismiss = { voiceOpen = false })
 
         // Only above a saved copy. With nothing to show, the whole screen says it instead.
         AnimatedVisibility(link is Link.Down && lines.isNotEmpty(), enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {

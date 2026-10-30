@@ -7,6 +7,11 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -42,6 +47,12 @@ interface ConversationSource {
     suspend fun page(after: Int? = null, before: Int? = null, limit: Int? = null, waitSeconds: Int? = null): Page
 }
 
+/** Where the voice setting is read and changed. An interface so [Voice] can be tested without a server. */
+interface SettingsSource {
+    suspend fun voice(): String
+    suspend fun setVoice(voice: String): String
+}
+
 expect fun createHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient
 
 /**
@@ -49,7 +60,7 @@ expect fun createHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient
  * conversation is kept by the server that relays it, and read from there with a token that can
  * read and nothing else.
  */
-class Api(baseUrl: String, private val token: String) : ConversationSource {
+class Api(baseUrl: String, private val token: String) : ConversationSource, SettingsSource {
     private val base = baseUrl.trimEnd('/')
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
@@ -91,4 +102,44 @@ class Api(baseUrl: String, private val token: String) : ConversationSource {
             throw ApiFailure.Broken(response.status.value)
         }
     }
+
+    /**
+     * The voiceControl server's settings (its `server/lib/settings.mjs`). The read token may change
+     * them: which voice the phone speaks in alters nothing anyone hears from Ben but the sound.
+     */
+    override suspend fun voice(): String = voiceOf(call { client.get("$base/api/settings") { header(HttpHeaders.Authorization, "Bearer $token") } })
+
+    override suspend fun setVoice(voice: String): String = voiceOf(
+        call {
+            client.put("$base/api/settings") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody("""{"voice":"$voice"}""")
+            }
+        },
+    )
+
+    private suspend fun call(block: suspend () -> HttpResponse): HttpResponse {
+        val response = try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiFailure.Unreachable()
+        }
+        if (response.status == HttpStatusCode.Unauthorized) throw ApiFailure.Refused()
+        if (!response.status.isSuccess()) throw ApiFailure.Broken(response.status.value)
+        return response
+    }
+
+    private suspend fun voiceOf(response: HttpResponse): String = try {
+        json.decodeFromString(VoiceSettings.serializer(), response.bodyAsText()).voice
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        throw ApiFailure.Broken(response.status.value)
+    }
 }
+
+@kotlinx.serialization.Serializable
+private data class VoiceSettings(val voice: String)

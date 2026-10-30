@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import com.automatelinux.ben.data.Api
 import com.automatelinux.ben.data.Conversation
 import com.automatelinux.ben.data.KeyValueStore
+import com.automatelinux.ben.data.VoiceSetting
 import com.automatelinux.ben.ui.ConversationScreen
 import com.automatelinux.ben.ui.theme.AppTheme
 import com.automatelinux.ben.ui.theme.Fonts
@@ -26,13 +27,15 @@ import kotlinx.datetime.Clock
 @Composable
 fun App(baseUrl: String, token: String, store: KeyValueStore, fonts: Fonts, active: Boolean, platformConfirmsCopy: Boolean) {
     val now = remember { { Clock.System.now().toEpochMilliseconds() } }
-    val conversation = remember { Conversation(Api(baseUrl, token), store, now) }
+    val api = remember { Api(baseUrl, token) }
+    val conversation = remember { Conversation(api, store, now) }
+    val voice = remember { VoiceSetting(api) }
 
     LaunchedEffect(active) {
         if (active) conversation.follow()
     }
 
     AppTheme(fonts) {
-        ConversationScreen(conversation, now, platformConfirmsCopy)
+        ConversationScreen(conversation, voice, now, platformConfirmsCopy)
     }
 }
