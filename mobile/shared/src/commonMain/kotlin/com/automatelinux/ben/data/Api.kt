@@ -47,10 +47,14 @@ interface ConversationSource {
     suspend fun page(after: Int? = null, before: Int? = null, limit: Int? = null, waitSeconds: Int? = null): Page
 }
 
-/** Where the voice setting is read and changed. An interface so [Voice] can be tested without a server. */
+/** How Ben sounds, as the voiceControl server has it: whose voice, and how loud (percent). */
+data class Sound(val voice: String, val volume: Int)
+
+/** Where the voice settings are read and changed. An interface so [VoiceSetting] can be tested without a server. */
 interface SettingsSource {
-    suspend fun voice(): String
-    suspend fun setVoice(voice: String): String
+    suspend fun sound(): Sound
+    suspend fun setVoice(voice: String): Sound
+    suspend fun setVolume(volume: Int): Sound
 }
 
 expect fun createHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient
@@ -107,14 +111,18 @@ class Api(baseUrl: String, private val token: String) : ConversationSource, Sett
      * The voiceControl server's settings (its `server/lib/settings.mjs`). The read token may change
      * them: which voice the phone speaks in alters nothing anyone hears from Ben but the sound.
      */
-    override suspend fun voice(): String = voiceOf(call { client.get("$base/api/settings") { header(HttpHeaders.Authorization, "Bearer $token") } })
+    override suspend fun sound(): Sound = soundOf(call { client.get("$base/api/settings") { header(HttpHeaders.Authorization, "Bearer $token") } })
 
-    override suspend fun setVoice(voice: String): String = voiceOf(
+    override suspend fun setVoice(voice: String): Sound = put("""{"voice":"$voice"}""")
+
+    override suspend fun setVolume(volume: Int): Sound = put("""{"volume":$volume}""")
+
+    private suspend fun put(body: String): Sound = soundOf(
         call {
             client.put("$base/api/settings") {
                 header(HttpHeaders.Authorization, "Bearer $token")
                 contentType(ContentType.Application.Json)
-                setBody("""{"voice":"$voice"}""")
+                setBody(body)
             }
         },
     )
@@ -132,8 +140,8 @@ class Api(baseUrl: String, private val token: String) : ConversationSource, Sett
         return response
     }
 
-    private suspend fun voiceOf(response: HttpResponse): String = try {
-        json.decodeFromString(VoiceSettings.serializer(), response.bodyAsText()).voice
+    private suspend fun soundOf(response: HttpResponse): Sound = try {
+        json.decodeFromString(VoiceSettings.serializer(), response.bodyAsText()).let { Sound(it.voice, it.volume) }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -142,4 +150,4 @@ class Api(baseUrl: String, private val token: String) : ConversationSource, Sett
 }
 
 @kotlinx.serialization.Serializable
-private data class VoiceSettings(val voice: String)
+private data class VoiceSettings(val voice: String, val volume: Int)

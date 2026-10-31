@@ -20,10 +20,16 @@ import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -91,6 +97,9 @@ fun VoiceSheet(setting: VoiceSetting, onDismiss: () -> Unit) {
                 onClick = { scope.launch { setting.choose(VoiceSetting.PHONE) } },
             )
 
+            Spacer(Modifier.height(24.dp))
+            VolumeRow(setting, onChoose = { scope.launch { setting.chooseVolume(it) } })
+
             setting.failure?.let { f ->
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -137,4 +146,59 @@ private fun VoiceOption(tag: String, title: String, body: String, selected: Bool
             if (selected) Box(Modifier.size(11.dp).clip(CircleShape).background(p.voice))
         }
     }
+}
+
+/**
+ * How loud Ben is, on top of the phone's media volume. The slider moves over the server's stops
+ * (~2 dB apart, so every notch is a difference you can hear); the level is sent when the thumb is
+ * let go, and the listener answers by saying one line at the new level.
+ */
+@Composable
+private fun VolumeRow(setting: VoiceSetting, onChoose: (Int) -> Unit) {
+    val p = LocalPalette.current
+    val t = LocalType.current
+    val stops = VoiceSetting.VOLUMES
+    val known = setting.volume
+    // Where the thumb is while dragging; null = follow the server.
+    var dragging by remember { mutableStateOf<Int?>(null) }
+    val shown = dragging ?: setting.savingVolume ?: known
+
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("Volume", style = t.body, color = p.ink, modifier = Modifier.weight(1f))
+        Text(
+            text = if (shown == null) "—" else "${shown}%",
+            style = t.body,
+            color = if (shown != null && shown > 100) p.voice else p.ink,
+            modifier = Modifier.testTag("voice-volume-value"),
+        )
+    }
+    Spacer(Modifier.height(4.dp))
+    Slider(
+        value = (shown?.let(stops::indexOf)?.takeIf { it >= 0 } ?: stops.indexOf(100)).toFloat(),
+        onValueChange = { dragging = stops[it.toInt().coerceIn(stops.indices)] },
+        onValueChangeFinished = {
+            dragging?.let(onChoose)
+            dragging = null
+        },
+        valueRange = 0f..(stops.size - 1).toFloat(),
+        steps = stops.size - 2,
+        enabled = known != null && setting.savingVolume == null,
+        colors = SliderDefaults.colors(
+            thumbColor = p.voice,
+            activeTrackColor = p.voice,
+            inactiveTrackColor = p.hairline,
+            activeTickColor = p.raised,
+            inactiveTickColor = p.faint,
+        ),
+        modifier = Modifier.testTag("voice-volume").fillMaxWidth(),
+    )
+    Text(
+        text = when {
+            setting.savingVolume != null -> "Setting…"
+            known == null -> "Not read from the desktop yet."
+            else -> "On top of the phone's media volume — 100% is as made. When you let go, the phone says a line at the new level."
+        },
+        style = t.label,
+        color = p.soft,
+    )
 }
