@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.RecordVoiceOver
+import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -25,6 +28,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +44,7 @@ import com.automatelinux.ben.data.ApiFailure
 import com.automatelinux.ben.data.VoiceSetting
 import com.automatelinux.ben.ui.theme.LocalPalette
 import com.automatelinux.ben.ui.theme.LocalType
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** The round key in the top bar that opens [VoiceSheet]. */
@@ -56,6 +61,43 @@ fun VoiceKey(onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(Icons.Rounded.RecordVoiceOver, contentDescription = "Ben's voice", tint = p.ink, modifier = Modifier.size(19.dp))
+    }
+}
+
+/**
+ * "End conversation" (asked for 2026-10-31): the phone stops talking, drops the answer it is
+ * waiting for, and goes back to the wake phrase — the listener keeps running. The same thing the
+ * listener's own notification button does, sent through the desktop. The key says what became of
+ * the press: a tick when the desktop took it, a warning mark when it could not be reached.
+ */
+@Composable
+fun StopKey(setting: VoiceSetting) {
+    val p = LocalPalette.current
+    val scope = rememberCoroutineScope()
+    var outcome by remember { mutableStateOf<Boolean?>(null) }
+    LaunchedEffect(outcome) {
+        if (outcome != null) {
+            delay(if (outcome == true) 1_500 else 3_000)
+            outcome = null
+        }
+    }
+    val (icon, label, tint) = when (outcome) {
+        true -> Triple(Icons.Rounded.Check, "Conversation ended", p.ink)
+        false -> Triple(Icons.Rounded.ErrorOutline, "Could not reach the desktop to end the conversation", p.voice)
+        null -> Triple(Icons.Rounded.Stop, "End conversation", p.ink)
+    }
+    Box(
+        Modifier
+            .testTag("end-conversation")
+            .size(38.dp)
+            .clip(CircleShape)
+            .border(1.dp, p.hairline, CircleShape)
+            .clickable(role = Role.Button, enabled = !setting.ending, onClickLabel = "End conversation") {
+                scope.launch { outcome = setting.endConversation() }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = label, tint = if (setting.ending) p.faint else tint, modifier = Modifier.size(20.dp))
     }
 }
 

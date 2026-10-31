@@ -7,6 +7,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -55,6 +56,9 @@ interface SettingsSource {
     suspend fun sound(): Sound
     suspend fun setVoice(voice: String): Sound
     suspend fun setVolume(volume: Int): Sound
+
+    /** Tell the phone's listener to stop talking and go back to the wake phrase. */
+    suspend fun endConversation()
 }
 
 expect fun createHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient
@@ -116,6 +120,11 @@ class Api(baseUrl: String, private val token: String) : ConversationSource, Sett
     override suspend fun setVoice(voice: String): Sound = put("""{"voice":"$voice"}""")
 
     override suspend fun setVolume(volume: Int): Sound = put("""{"volume":$volume}""")
+
+    /** voiceControl's `POST /api/end-conversation`; the listener hears it on its held settings request. */
+    override suspend fun endConversation() {
+        call { client.post("$base/api/end-conversation") { header(HttpHeaders.Authorization, "Bearer $token") } }
+    }
 
     private suspend fun put(body: String): Sound = soundOf(
         call {

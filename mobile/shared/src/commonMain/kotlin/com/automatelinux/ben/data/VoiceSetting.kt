@@ -72,6 +72,28 @@ class VoiceSetting(private val source: SettingsSource) {
         }
     }
 
+    /** "End conversation" while it is on its way; then whether it went. */
+    var ending: Boolean by mutableStateOf(false)
+        private set
+
+    /** Ask the phone to stop. True when the desktop took it; a failure is in [failure]. */
+    suspend fun endConversation(): Boolean {
+        if (ending) return false
+        ending = true
+        return try {
+            source.endConversation()
+            failure = null
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: ApiFailure) {
+            failure = e
+            false
+        } finally {
+            ending = false
+        }
+    }
+
     private fun take(s: Sound) {
         current = s.voice
         volume = s.volume

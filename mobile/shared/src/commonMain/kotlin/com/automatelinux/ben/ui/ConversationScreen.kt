@@ -92,7 +92,7 @@ fun ConversationScreen(c: Conversation, voice: VoiceSetting, now: () -> Long, pl
         TopBar(link, onRetry = c::retryNow, onVoice = {
             voiceOpen = true
             scope.launch { voice.load() }
-        })
+        }, stopKey = { StopKey(voice) })
         if (voiceOpen) VoiceSheet(voice, onDismiss = { voiceOpen = false })
 
         // Only above a saved copy. With nothing to show, the whole screen says it instead.

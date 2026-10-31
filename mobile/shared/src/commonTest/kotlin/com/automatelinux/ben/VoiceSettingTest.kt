@@ -20,6 +20,11 @@ private class FakeSettings(var stored: String = VoiceSetting.PHONE, var down: Bo
         stored = voice
         return Sound(stored, volume)
     }
+    var ends = 0
+    override suspend fun endConversation() {
+        if (down) throw ApiFailure.Unreachable()
+        ends++
+    }
     override suspend fun setVolume(volume: Int): Sound {
         if (down) throw ApiFailure.Unreachable()
         writes++
@@ -101,5 +106,17 @@ class VoiceSettingTest {
         s.chooseVolume(250)
         assertEquals(100, s.volume)
         assertIs<ApiFailure.Unreachable>(s.failure)
+    }
+
+    @Test
+    fun endingSaysWhetherTheDesktopTookIt() = runTest {
+        val src = FakeSettings()
+        val s = VoiceSetting(src)
+        assertEquals(true, s.endConversation())
+        assertEquals(1, src.ends)
+        src.down = true
+        assertEquals(false, s.endConversation())
+        assertIs<ApiFailure.Unreachable>(s.failure)
+        assertEquals(false, s.ending)
     }
 }
